@@ -7,6 +7,8 @@ import collections
 import csv
 import re
 import sys
+from numpy import *
+import matplotlib.pyplot as plt
 
 class VBoxData:
 
@@ -50,11 +52,11 @@ class VBoxData:
                         self.comments.append(line)
 
                     if line and (section == 'column names'):
-                        self.column_names = line.split()
-                        assert(self.column_names[1] == 'time') # We assume this later
                         # To use the columns as field names in named tuples, we need to replace hyphens
-                        VBoxDataTuple = collections.namedtuple('VBoxDataTuple', 
-                            [c.replace('-','_') for c in self.column_names])
+                        self.column_names = [c.replace('-','_') for c in line.split()]
+                        self.column_name_map = dict([k[::-1] for k in enumerate(self.column_names)])
+                        assert(self.column_names[1] == 'time') # We assume this later
+                        VBoxDataTuple = collections.namedtuple('VBoxDataTuple', self.column_names)
 
                     if line and (section == 'data'):
                         # I think data fields are always numbers, but in different formats
@@ -67,8 +69,6 @@ class VBoxData:
                         (hrs, mins, secs) = int(tstamp[0:2]), int(tstamp[2:4]), float(tstamp[4:])
                         fields[1] = 3600 * hrs + 60 * mins + secs
 
-                        print "%f,%f" % (fields[1], float(bits[1]))
-
                         # We assume that time=000000.00 indicates the start of useful data
                         if fields[1] == 0.0:
                             self.data = []
@@ -80,11 +80,21 @@ class VBoxData:
 def main():
     with open(sys.argv[1]) as f:
         v1 = VBoxData(f)
+
+    # Dump as CSV
     # csv_out =csv.writer(sys.stdout)
     # csv_out.writerow(v1.column_names)
     # for d in v1.data:
     #     csv_out.writerow(d)
-    import matplotlib.pyplot as plt
+
+    # Playing with NumPy
+    # a = array(v1.data)
+    # b = a.transpose()
+    # plt.plot(b[v1.column_name_map['time']], b[v1.column_name_map['PedalPos_CH']])
+    # plt.plot(b[v1.column_name_map['time']], b[v1.column_name_map['BrakePressure_HS1_CH']])
+    # plt.plot(b[v1.column_name_map['time']], b[v1.column_name_map['VehicleSpeed_HS1_CH']])
+    # plt.show()
+
     plt.figure(1)
 
     plt.subplot(211)
