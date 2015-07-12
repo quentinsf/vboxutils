@@ -9,6 +9,7 @@ import re
 import sys
 import click
 import colorama
+from datetime import datetime, timedelta
 from numpy import *
 import matplotlib.pyplot as plt
 
@@ -26,6 +27,7 @@ class VBoxData:
         get, for example, self.data[0].velocity.
         """
         self.creation_date = None
+        self.creation_midnight = None
         self.comments = []
         self.headers = []
         self.column_names = []
@@ -47,7 +49,9 @@ class VBoxData:
                                     
                     if (section is None) and line.startswith('File created on'):
                         # Will parse this at some point
-                        self.creation_date = line[16:]
+                        creation_date = line[16:]
+                        self.creation_date = datetime.strptime(creation_date, "%d/%m/%Y @ %H:%M:%S")
+                        self.creation_midnight = self.creation_date.replace(hour=0, minute=0, second=0, microsecond=0)
 
                     if line and (section == 'header'):
                         self.headers.append(line)
@@ -59,7 +63,10 @@ class VBoxData:
                         # To use the columns as field names in named tuples, we need to replace hyphens
                         self.column_names = [c.replace('-','_') for c in line.split()]
                         self.column_name_map = dict([k[::-1] for k in enumerate(self.column_names)])
-                        assert(self.column_names[1] == 'time') # We assume this later
+                        assert(self.column_names[1] == 'time')  # We assume this later
+                        assert(self.column_names[2] == 'lat')   # We assume this later
+                        assert(self.column_names[3] == 'long')  # We assume this later
+                        self.column_names.append('datetime')    # We'll add one of our own
                         VBoxDataTuple = collections.namedtuple('VBoxDataTuple', self.column_names)
 
                     if line and (section == 'data'):
@@ -72,20 +79,35 @@ class VBoxData:
                         tstamp = bits[1]
                         (hrs, mins, secs) = int(tstamp[0:2]), int(tstamp[2:4]), float(tstamp[4:])
                         fields[1] = 3600 * hrs + 60 * mins + secs
+                        fields.append( self.creation_midnight.replace(hour = hrs, minute=mins, second=int(secs)) )
 
+                        # And lat and long are in minutes, with west as positive
+                        # Convert to conventional degrees
+                        fields[2] = float(fields[2])/60.0
+                        fields[3] = -1 * float(fields[3])/60.0
+
+                        # If there's no GPS signal, we won't have absolute time
                         # We assume that time=000000.00 indicates the start of useful data
                         if fields[1] == 0.0:
                             self.data = []
+
                         tup = VBoxDataTuple(*fields)
                         self.data.append(tup)
 
+            self.min_lat = min([d.lat for d in self.data])
+            self.max_lat = max([d.lat for d in self.data])
+            self.min_long = min([d.long for d in self.data])
+            self.max_long = max([d.long for d in self.data])
 
-@click.command
-def main():
-    with open(sys.argv[1]) as f:
-        v1 = VBoxData(f)
 
-    print len(v1.data),"points"
+@click.command()
+@click.option('--graph', '-g', default=False, is_flag=True, help="Draw a pretty plot")
+@click.option('--track', '-t', default=False, is_flag=True, help="Draw a map")
+@click.option('--gpx',   '-p', default=False, is_flag=True, help="Output a GPX file")
+@click.argument('vbo_file', type=click.File('r'))
+def main(graph, track, gpx, vbo_file):
+    v1 = VBoxData(vbo_file)
+    print >>sys.stderr, len(v1.data),"points"
     # Dump as CSV
     # csv_out =csv.writer(sys.stdout)
     # csv_out.writerow(v1.column_names)
@@ -100,7 +122,7 @@ def main():
     # plt.plot(b[v1.column_name_map['time']], b[v1.column_name_map['VehicleSpeed_HS1_CH']])
     # plt.show()
 
-    if False:
+    if graph:
         plt.figure(1)
 
         plt.subplot(211)
@@ -124,29 +146,36 @@ def main():
 
         plt.show()
 
-    plt.figure(2)
-    plt.title('Track')
-    ax = plt.gca()
-    ax.set_axis_bgcolor((0,0,0))
-    max_vel = max([d.velocity for d in v1.data])
-    prev_lat, prev_lon = None, None
-    for d in v1.data[::10]:
-        vel_norm = d.velocity/max_vel
-        # lat and long appear to be in minutes N & W
-        lat, lon = d.lat/60.0, -d.long/60.0
-        if prev_lat is not None:
-            track_pt = plt.plot(
-                [prev_lon, lon], [prev_lat, lat],
-                color=(vel_norm,0.4,1.0-vel_norm,1)
-            )
-        prev_lat, prev_lon = lat, lon
-    # Coventry label    
-    plt.plot(-1.510948, 52.407762, marker='+', color='white') # Coventry
-    plt.annotate('Coventry', xy=(-1.510948, 52.407762), xytext=(-1.509, 52.408), color='gray')
-    # Warwick label
-    plt.plot( -1.5626, 52.3838, marker='+', color='white')
-    plt.annotate('Warwick Uni', xy=( -1.5626, 52.3838), xytext=( -1.5616, 52.3848,), color='gray')
-    plt.show()
+    if track:
+        plt.figure(2)
+        plt.title('Track')
+        ax = plt.gca()
+        ax.set_axis_bgcolor((0,0,0))
+        max_vel = max([d.velocity for d in v1.data])
+        prev_lat, prev_long = None, None
+        for d in v1.data[::10]:
+            vel_norm = d.velocity/max_vel
+            # lat and long appear to be in minutes N & W
+            if prev_lat is not None:
+                track_pt = plt.plot(
+                    [prev_long, d.long], [prev_lat, d.lat],
+                    color=(vel_norm,0.4,1.0-vel_norm,1)
+                )
+            prev_lat, prev_long = d.lat, d.long
+        # Coventry label    
+        plt.plot(-1.510948, 52.407762, marker='+', color='white') # Coventry
+        plt.annotate('Coventry', xy=(-1.510948, 52.407762), xytext=(-1.509, 52.408), color='gray')
+        # Warwick label
+        plt.plot( -1.5626, 52.3838, marker='+', color='white')
+        plt.annotate('Warwick Uni', xy=( -1.5626, 52.3838), xytext=( -1.5616, 52.3848,), color='gray')
+        plt.show()
+
+    if gpx:
+        # Get the Jinja template for rendering a GPX file
+        from jinja2 import Environment, FileSystemLoader
+        env = Environment(loader=FileSystemLoader('.'))
+        template = env.get_template('track.gpx.j2')
+        print template.render(vboxdata = v1)
 
 if __name__ == '__main__':
     main()
