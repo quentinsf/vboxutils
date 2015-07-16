@@ -156,35 +156,38 @@ class VBoxData:
         Plot location and colour with speed.
         """
         import matplotlib.pyplot as plt
+        from matplotlib.transforms import ScaledTranslation
 
-        plt.figure(2)
+        fig = plt.figure()
         plt.title('Track')
         ax = plt.gca()
-        ax.set_axis_bgcolor((0,0,0))
+        ax.set_axis_bgcolor((0.1,0.1,0.1))
         max_vel = max([d.velocity for d in self.data])
         if max_vel == 0:
             click.echo("No movement detected!", err=True)
             sys.exit(1)
 
-        prev_lat, prev_long = None, None
-        for d in self.data[::10]:
-            vel_norm = d.velocity/max_vel
-            # lat and long appear to be in minutes N & W
-            if prev_lat is not None:
-                track_pt = plt.plot(
-                    [prev_long, d.long], [prev_lat, d.lat],
-                    color=(vel_norm,0.4,1.0-vel_norm,1)
-                )
-            prev_lat, prev_long = d.lat, d.long
-
+        plt.scatter(
+            [d.long for d in self.data],
+            [d.lat for d in self.data],
+            c=[(d.velocity/max_vel,0.4,1.0-d.velocity/max_vel,1) for d in self.data],
+            s=1,
+            marker = u'.',
+            linewidth=0, edgecolor='none'
+        )
+ 
         plt.axis('equal')  # a degree is a degree
-        
+
+        labels = [
+            ('Coventry', -1.510948, 52.407762),
+            ('Warwick Uni', -1.5626, 52.3838),
+        ]
         # Coventry label
-        plt.plot(-1.510948, 52.407762, marker='+', color='white') # Coventry
-        plt.annotate('Coventry', xy=(-1.510948, 52.407762), xytext=(-1.509, 52.408), color='gray')
-        # Warwick label
-        plt.plot( -1.5626, 52.3838, marker='+', color='white')
-        plt.annotate('Warwick Uni', xy=( -1.5626, 52.3838), xytext=( -1.5616, 52.3848,), color='gray')
+        for l in labels:
+            plt.plot(l[1], l[2], marker='+', color='white')
+            plt.annotate(l[0], xy=(l[1], l[2]), 
+                    xytext=(5,5), textcoords='offset points', color='gray', alpha=0.8)
+        
         plt.show()
 
 
