@@ -2,11 +2,11 @@
 
 The `vboxread.py` script can read the .VBO format files produced by a RaceLogic VBOX and perform a few operations on the data.
 
-It will perform a couple of conversions:
+It will perform a couple of conversions on the data:
 
 * The time, which is in the VBOX file as HHMMSS.SSS, will be converted to absolute seconds since the epoch, assuming this time is on the same day as the creation time recorded in the file. This makes sense as long as a GPS is connected.
 
-* Latitude and longitude are in the VBOX file as minutes, with west being positive. This converts to degrees, with the more standard east as positive.
+* Latitude and longitude are in the VBOX file as minutes, with west being positive. This script converts them to degrees, with east as positive.
 
 
 ## Basic use
@@ -27,6 +27,8 @@ This will plot a graph and output a CSV file of the data.
 This depends on some other python packages, so you need to install them.
 
     pip install -r requirements.txt
+
+You may not need everything in requirements.txt if, say, you don't want to plot any graphs.
 
 ## Mac OS X install
 
