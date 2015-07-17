@@ -1,1 +1,5 @@
 env
+*.pyc
+.DS_Store
+*.avi
+*.mov
