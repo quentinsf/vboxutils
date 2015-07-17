@@ -20,12 +20,15 @@ class VBoxData:
     """
     def __init__(self, from_vbo_file=None):
         """
-        Initialise instance, optionbally reading data from
+        Initialise instance, optionally reading data from
         VBO file object.
 
         The 'data' field will be populated with a list of namedtuples,
         each of which has float fields based on the column names. So you can
         get, for example, self.data[0].velocity.
+
+        Future optimisation if needed: we could slice the data more efficiently
+        by making it a NumPy array rather than a list of named tuples.
         """
         self.creation_date = None
         self.creation_midnight = None
@@ -87,6 +90,8 @@ class VBoxData:
                     tstamp = bits[1]
                     (hrs, mins, secs) = int(tstamp[0:2]), int(tstamp[2:4]), float(tstamp[4:])
                     fields[1] = 3600 * hrs + 60 * mins + secs
+                    # We turn it into an absolute timestamp by offsetting the time 
+                    # from midnight on the creation date.
                     fields.append( self.creation_midnight.replace(hour = hrs, minute=mins, second=int(secs)) )
 
                     # And lat and long are in minutes, with west as positive
@@ -94,8 +99,10 @@ class VBoxData:
                     fields[2] = float(fields[2])/60.0
                     fields[3] = -1 * float(fields[3])/60.0
 
-                    # If there's no GPS signal, we won't have absolute time
-                    # We assume that time=000000.00 indicates the start of useful data
+                    # If there's no GPS signal, we won't have absolute time.
+                    # We assume that time=000000.00 indicates the start of useful data.
+                    # (This comes from an early test file where the first few records
+                    # were at 23:59:xx.xxx.)
                     if fields[1] == 0.0:
                         self.data = []
 
@@ -124,7 +131,7 @@ class VBoxData:
         """
         Plot some interesting things on a graph.
         """
-        # from numpy import *
+
         import matplotlib.pyplot as plt
 
         plt.figure(1)
