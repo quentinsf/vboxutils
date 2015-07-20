@@ -2,3 +2,4 @@
 click
 colorama
 jinja2
+flask
