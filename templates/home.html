@@ -5,6 +5,8 @@
 
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+  
     <style type="text/css">
       html, body { 
         width: 100%; height: 100%; 
@@ -17,6 +19,7 @@
         font-family: Helvetica Neue, Helvetica, Arial, sans;
       }
       #map_canvas { width: 100%; height: 70%; margin: 0; padding: 0;} 
+      #width_scale { margin: 10px; width: 50%;}
     </style>
 
     <script type="text/javascript"
@@ -25,12 +28,16 @@
     <script type="text/javascript" 
       src="https://code.jquery.com/jquery-2.1.4.min.js">
     </script>
+    <script type="text/javascript" 
+      src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js">
+    </script>
     
     <script type="text/javascript">
       function initialize() {
         var mapOptions = {{map_options|tojson|safe}};
         mapOptions.mapTypeId = google.maps.MapTypeId.HYBRID;
         var map = new google.maps.Map($('#map_canvas').get(0), mapOptions);
+        var width_slider = 50;
 
         {% if marker %}
             var marker = new google.maps.Marker({{marker|tojson|safe}});
@@ -50,7 +57,7 @@
                 color = velocity_color(velocity);
             return {
               strokeColor: color,
-              strokeWeight: 2
+              strokeWeight: 6 * (width_slider/100)
             };
         }
 
@@ -59,7 +66,7 @@
                  color = velocity_color(velocity);
             return {
               strokeColor: color,
-              strokeWeight: 2 + feature.getProperty('PedalPos_CH') / 8
+              strokeWeight: 2 + feature.getProperty('PedalPos_CH') / 4 * (width_slider/100)
             };
         }
       
@@ -68,7 +75,7 @@
                  color = velocity_color(velocity);
             return {
               strokeColor: color,
-              strokeWeight: 2 + feature.getProperty('BrakePressure_HS1_CH') / 4
+              strokeWeight: 2 + feature.getProperty('BrakePressure_HS1_CH') / 2 * (width_slider/100)
             };
         }
 
@@ -83,6 +90,14 @@
         $('#fixed_width').click(function() { map.data.setStyle(fixed_width); });
         $('#accel_width').click(function() { map.data.setStyle(accel_width); });
         $('#brake_width').click(function() { map.data.setStyle(brake_width); });
+        $('#width_scale').slider({
+          value: 50,
+          change: function(event, ui) {
+            width_slider = ui.value;
+            map.data.setStyle(map.data.getStyle());
+          }
+        });
+
 
         map.data.loadGeoJson('route.json');
       };
@@ -104,6 +119,9 @@
         <button id="fixed_width">Nothing</button>
         <button id="accel_width">Accelerator</button>
         <button id="brake_width">Brake</button>
+        <div>
+          Width scale: <div id="width_scale"></div>
+        </div>
       </div>
     </div>
 </body>
