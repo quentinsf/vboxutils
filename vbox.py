@@ -13,6 +13,14 @@ import json
 from datetime import datetime, timedelta
 
 
+# By default, the JSON package doesn't encode datetimes.
+class TimeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return json.JSONEncoder.default(self, obj)
+
+
 class VBoxData:
     """
     A class representing the data read from a .VBO file.
@@ -205,18 +213,28 @@ class VBoxData:
         template = env.get_template('track.gpx.j2')
         outfile.write( template.render(vboxdata = self) )
 
-    def write_geojson(self, outfile=sys.stdout):
+
+    def to_json(self, stride=10):
+        """
+        Convert every stride-th point to GeoJSON.
+        """
         import json
         prev_p = None
         features = []
-        for p in self.data:
+        for p in self.data[::stride]:
             if prev_p:
                 features.append(
                    { "type": "Feature", 
-                     "geometry": { "type": "LineString", "coordinates": [[ prev_p.long, prev_p.lat ], [ p.long, p.lat ]] }
+                     "geometry": { "type": "LineString", "coordinates": [[ prev_p.long, prev_p.lat ], [ p.long, p.lat ]] },
+                     "properties": p._asdict()
                    }
                 )
             prev_p = p
         root = { "type": "FeatureCollection", "features": features }
-        json.dump(root, outfile)
+        return json.dumps(root, cls=TimeEncoder)
+
+
+    def write_geojson(self, outfile=sys.stdout):
+        outfile.write(self.to_json())
+
 

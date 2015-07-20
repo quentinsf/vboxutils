@@ -13,13 +13,24 @@ It will perform a couple of conversions on the data:
 
 Run
 
-    ./vobxread.py --help
+    ./vboxread.py --help
 
 for the options.  Filenames can generally be specified as '-' if you want to use stdin/stdout. You can also specify more than one option at a time, for example:
 
     ./vboxread.py --graph --csv my.csv my.vbo
 
 This will plot a graph and output a CSV file of the data.
+
+The `vboxsvr.py` script will create a webserver on port 5000 that serves up the track overlaid on a Google map.  
+
+    ./vboxsrv.py my.vbo
+
+It creates a static HTML page which reads the JSON file that the server makes available at route.json.  You can therefore make a static dump of a single track available on a website with, for example:
+
+    curl http://localhost:5000/ > route.html
+    curl http://localhost:5000/route.json > route.json
+
+and then put the two files on any site.
 
 
 ## Installation

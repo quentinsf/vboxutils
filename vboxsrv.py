@@ -2,13 +2,14 @@
 
 from flask import Flask, render_template
 
-from vbox import VBoxData
+from vbox import VBoxData, TimeEncoder
 
+import datetime
 import sys
+import json
 
 app = Flask(__name__)
 GOOGLE_API_BROWSER_KEY="AIzaSyBci7wj9yFLcf5SHEmwXFXvWxbg97oSxYQ"
-
 
 @app.route("/")
 def home():
@@ -29,26 +30,7 @@ def home():
 # Note that we just return one point in every 10.
 @app.route("/route.json")
 def geojson():
-    import json
-    prev_p = None
-    features = []
-    for p in app.vbox_data.data[::10]:
-        if prev_p:
-            features.append(
-               { "type": "Feature", 
-                 "geometry": { "type": "LineString", "coordinates": [[ prev_p.long, prev_p.lat ], [ p.long, p.lat ]] },
-                 "properties": { 
-                    "color": "rgb({r},{g},{b})".format(
-                        r=int(255*p.velocity/app.vbox_data.max_velocity),  
-                        g=0,  
-                        b=255-int(255*p.velocity/app.vbox_data.max_velocity)),
-                    "weight": p.PedalPos_CH,
-                 }
-               }
-            )
-        prev_p = p
-    root = { "type": "FeatureCollection", "features": features }
-    return json.dumps(root)
+    return app.vbox_data.to_json()
 
 if __name__ == '__main__':
     filename = sys.argv[1]
