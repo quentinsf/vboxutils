@@ -62,7 +62,7 @@ def home():
                         api_key=GOOGLE_API_BROWSER_KEY, map_options=map_options, marker=marker)
                 )
             return redirect(html_filename)
-            
+
     else:
         routes = [
             os.path.basename(r).rsplit('.')[0] for r in glob.glob(os.path.join(UPLOAD_FOLDER, '*.vbo'))
@@ -75,9 +75,9 @@ def route(routename):
 
 # Return the current route as GeoJSON.  
 # Note that we just return one point in every 10.
-@app.route("/route/<routename>/json")
-def geojson():
-    return app.vbox_data.to_json()
+@app.route("/about/")
+def about():
+    return  render_template('about.html')
 
 if __name__ == '__main__':
     app.debug=True  # flask dbeugging and auto-reloading
