@@ -1,128 +1,17 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>VBRAD maps - {{title}}</title>
-
-    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
-
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+{% extends "base.html" %}
   
-    <style type="text/css">
-      html, body { 
-        width: 100%; height: 100%; 
-        margin:0; padding: 0;
-      }
-      body {
-        width: 90%;
-        margin: 10px;
-        padding: 25px 5%;  
-        font-family: Helvetica Neue, Helvetica, Arial, sans;
-      }
-      #map_canvas { width: 100%; height: 70%; margin: 0; padding: 0;} 
-      #width_scale { margin: 10px; width: 50%;}
-    </style>
+{% block content %}
+<ul>
+{% for r in routes %}
+    <li><a href="route/{{r}}">{{r}}</a></li>
+{% endfor %}
+</ul>
 
-    <script type="text/javascript"
-      src="https://maps.googleapis.com/maps/api/js?v=3&key={{api_key}}">
-    </script>
-    <script type="text/javascript" 
-      src="https://code.jquery.com/jquery-2.1.4.min.js">
-    </script>
-    <script type="text/javascript" 
-      src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js">
-    </script>
-    
-    <script type="text/javascript">
-      function initialize() {
-        var mapOptions = {{map_options|tojson|safe}};
-        mapOptions.mapTypeId = google.maps.MapTypeId.HYBRID;
-        var map = new google.maps.Map($('#map_canvas').get(0), mapOptions);
-        var width_slider = 50;
+<h2>Upload new VBO file</h2>
+<form action="" method=post enctype=multipart/form-data>
+    <p>
+    <input type=file name=file>
+    <input type=submit value=Upload></p>
+</form>
 
-        {% if marker %}
-            var marker = new google.maps.Marker({{marker|tojson|safe}});
-            marker.setMap(map);
-        {% endif %}
-        
-        // Return rgb(R,G,B) when given a velocity.
-        // At present we inject from the template the max velocity
-        // in the track.
-        function velocity_color(velocity) {
-            var norm_vel = velocity / {{vbd.max_velocity}};
-            return "rgb(" + Math.round(255*norm_vel) + ",0," + Math.round(255-255*norm_vel) + ")";
-        }
-
-        function fixed_width(feature) {
-            var velocity=feature.getProperty('velocity'),
-                color = velocity_color(velocity);
-            return {
-              strokeColor: color,
-              strokeWeight: 6 * (width_slider/100)
-            };
-        }
-
-        function accel_width(feature) {
-             var velocity=feature.getProperty('velocity'),
-                 color = velocity_color(velocity);
-            return {
-              strokeColor: color,
-              strokeWeight: 2 + feature.getProperty('PedalPos_CH') / 4 * (width_slider/100)
-            };
-        }
-      
-        function brake_width(feature) {
-             var velocity=feature.getProperty('velocity'),
-                 color = velocity_color(velocity);
-            return {
-              strokeColor: color,
-              strokeWeight: 2 + feature.getProperty('BrakePressure_HS1_CH') / 2 * (width_slider/100)
-            };
-        }
-
-        // "color": "rgb({r},{g},{b})".format(
-        //                 r=int(255*p.velocity/app.vbox_data.max_velocity),  
-        //                 g=0,  
-        //                 b=255-int(255*p.velocity/app.vbox_data.max_velocity)),
-        //             "weight": 2+p.PedalPos_CH / 8,
-
-        // Set the feature's colour based on its color property
-        map.data.setStyle(fixed_width);
-        $('#fixed_width').click(function() { map.data.setStyle(fixed_width); });
-        $('#accel_width').click(function() { map.data.setStyle(accel_width); });
-        $('#brake_width').click(function() { map.data.setStyle(brake_width); });
-        $('#width_scale').slider({
-          value: 50,
-          change: function(event, ui) {
-            width_slider = ui.value;
-            map.data.setStyle(map.data.getStyle());
-          }
-        });
-
-
-        map.data.loadGeoJson('route.json');
-      };
-      google.maps.event.addDomListener(window, 'load', initialize);
-    </script>
-</head>
-
-<body>
-    <h1>{{title}}</h1>
-
-    <div id="map_canvas"></div>
-    
-    <div id="controls">
-      <div id = "track_color">
-        Track color represents speed.
-      </div>
-      <div id="track_width">
-      Track width represents:
-        <button id="fixed_width">Nothing</button>
-        <button id="accel_width">Accelerator</button>
-        <button id="brake_width">Brake</button>
-        <div>
-          Width scale: <div id="width_scale"></div>
-        </div>
-      </div>
-    </div>
-</body>
-</html>
+{% endblock %}

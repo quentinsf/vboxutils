@@ -3,3 +3,7 @@ click
 colorama
 jinja2
 flask
+pandas
+folium
+ipython
+
