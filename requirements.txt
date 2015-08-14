@@ -5,5 +5,11 @@ jinja2
 flask
 pandas
 folium
+mistune
+pygments
+pyzmq
+functools32
+jsonschema
 ipython
+mpld3 
 

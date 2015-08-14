@@ -231,7 +231,7 @@ class VBoxData:
                 )
             prev_p = p
         root = { "type": "FeatureCollection", "features": features }
-        return json.dumps(root, cls=TimeEncoder)
+        return json.dumps(root, cls=TimeEncoder, indent=2)
 
 
     def write_geojson(self, outfile=sys.stdout):
