@@ -79,6 +79,9 @@ def route(routename):
 def about():
     return  render_template('about.html')
 
-if __name__ == '__main__':
+def main():
     app.debug=True  # flask dbeugging and auto-reloading
     app.run(host='0.0.0.0')
+
+if __name__ == '__main__':
+    main()

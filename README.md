@@ -13,17 +13,17 @@ It will perform a couple of conversions on the data:
 
 Run
 
-    ./vboxread.py --help
+    vboxread --help
 
 for the options.  Filenames can generally be specified as '-' if you want to use stdin/stdout. You can also specify more than one option at a time, for example:
 
-    ./vboxread.py --graph --csv my.csv my.vbo
+    vboxread --graph --csv my.csv my.vbo
 
 This will plot a graph and output a CSV file of the data.
 
 The `vboxsvr.py` script will create a webserver on port 5000 that can take uploads of tracks and serve them up overlaid on a Google map.  
 
-    ./vboxsrv.py
+    vboxsrv
 
 
 
@@ -34,6 +34,12 @@ This depends on some other python packages, so you need to install them.
     pip install -r requirements.txt
 
 You may not need everything in requirements.txt if, say, you don't want to plot any graphs.
+
+Then:
+
+    pip install .
+
+
 
 ## Mac OS X install
 
