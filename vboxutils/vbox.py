@@ -12,6 +12,9 @@ import sys
 import json
 from datetime import datetime, timedelta
 
+import logging
+logging.basicConfig()
+log=logging.getLogger(__name__)
 
 # By default, the JSON package doesn't encode datetimes.
 class TimeEncoder(json.JSONEncoder):
@@ -88,9 +91,15 @@ class VBoxData:
                     VBoxDataTuple = collections.namedtuple('VBoxDataTuple', self.column_names)
 
                 if line and (section == 'data'):
+                    bits = line.split()
+                    # Check we got the number of fields we expected
+                    if len(bits) != len(self.column_names)-1:
+                        log.warning('Skipping a data line which does not include %s fields', len(self.column_names)-1)
+                        continue
+
                     # I think data fields are always numbers, but in different formats
                     # We'll treat them as floats for now
-                    bits = line.split()
+
                     fields = [float(f) for f in bits]
 
                     # Time, however, looks like a float but is HHMMSS.SS
