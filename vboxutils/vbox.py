@@ -25,8 +25,7 @@ class TimeEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 # Here's a Jinja template for creating a GPX file
-GPX_TEMPLATE = """
-<?xml version="1.0" encoding="UTF-8"?>
+GPX_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
 <gpx
   version="1.0"
   creator="vboxread"
