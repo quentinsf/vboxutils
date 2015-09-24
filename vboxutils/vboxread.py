@@ -4,6 +4,7 @@
 # Specify one of the options to make it do something.
 # --help will give you the details.
 #
+# Quentin Stafford-Fraser 2015
 
 
 import click

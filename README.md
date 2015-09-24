@@ -1,6 +1,6 @@
 # VBOX experiments
 
-The `vboxread.py` script can read the .VBO format files produced by a RaceLogic VBOX and perform a few operations on the data.
+The `vboxread` script can read the .VBO format files produced by a RaceLogic VBOX and perform a few operations on the data.
 
 It will perform a couple of conversions on the data:
 
@@ -13,6 +13,7 @@ It will perform a couple of conversions on the data:
     - lat_deg
     - long_deg 
 
+Initially, it was expected that vboxread would nede to do a wide variety of tasks, but we're now primarily using it to convert to CSV and then processing CSV files with other tools.
 
 ## Basic use
 
@@ -36,7 +37,13 @@ For example:
 
 will output the bits of `route.csv` which start more than 300m from the Kirby Corner roundabout and will finish 300m from Coventry Cathedral.  It will save it to `trimmed.csv` If you have matplotlib installed, add `--graph` to see the effect.
 
-The `vboxsvr.py` script will create a webserver on port 5000 that can take uploads of .VBO tracks and serve them up overlaid on a Google map.  
+Since we expect to do most manipulations with these CSV files, it's useful to have a way to view the results on a map.  Google Earth and many other systems can view GPX files, which you can create from a CSV with `vboxcsv2gpx`:
+
+    vboxcsv2gpx -o trimmed.gpx trimmed.csv
+
+Many of these utilities will output to stdout if no output file is specified.
+
+The experimental `vboxsvr` script will create a webserver on port 5000 that can take uploads of .VBO tracks and serve them up overlaid on a Google map.  
 
     vboxsrv
 

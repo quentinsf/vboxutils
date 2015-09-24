@@ -2,7 +2,7 @@
 
 from setuptools import setup
 
-VERSION="0.4"
+VERSION="0.5"
 
 setup(
     name="vboxutils",
@@ -11,7 +11,8 @@ setup(
         'console_scripts': [
             'vboxread = vboxutils.vboxread:main',
             'vboxsrv = vboxutils.vboxsrv:main',
-            'vboxtrim = vboxutils.vboxtrim:main',            
+            'vboxtrim = vboxutils.vboxtrim:main',
+            'vboxcsv2gpx = vboxutils.vboxcsv2gpx:main',       
         ]
     },
     version = VERSION,
