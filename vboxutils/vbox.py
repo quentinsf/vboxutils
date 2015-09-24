@@ -142,12 +142,15 @@ class VBoxData:
                     tstamp = bits[1]
                     (hrs, mins, secs) = int(tstamp[0:2]), int(tstamp[2:4]), float(tstamp[4:])
                     # Add a new field with the time in seconds from midnight
-                    fields.append(3600 * hrs + 60 * mins + secs)
+                    time_of_day = 3600 * hrs + 60 * mins + secs
+                    fields.append(time_of_day)
                     # We turn it into an absolute timestamp by offsetting the time 
                     # from midnight on the creation date.
-                    absolute_time = self.creation_midnight.replace(hour = hrs, minute=mins, second=int(secs))
+                    midnight_timestamp = time.mktime(self.creation_midnight.timetuple())
+                    absolute_timestamp = midnight_timestamp + time_of_day
+                    absolute_time = datetime.fromtimestamp(absolute_timestamp)
                     fields.append( absolute_time )
-                    fields.append(  time.mktime(absolute_time.timetuple()) )
+                    fields.append( absolute_timestamp )
 
                     # And lat and long are in minutes, with west as positive
                     # Convert to conventional degrees as lat_deg and long_deg

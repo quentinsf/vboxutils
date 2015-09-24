@@ -34,7 +34,17 @@ The `vboxsvr.py` script will create a webserver on port 5000 that can take uploa
 
 ## Installation
 
-This depends on some other python packages, so you need to install them.
+On Linux, you may need to:
+
+    apt-get install python-dev python-pip
+
+first if you don't have much of a Python environment set up.
+
+Then, if you just want to install the current version with minimal extra effort, try:
+
+    pip install https://github.com/quentinsf/vboxutils/archive/master.zip
+
+This includes some basic dependencies which allow it to make CSV, JSON and GPX files.  If you want to do more, you may need to install some other python packages.
 
     pip install -r requirements.txt
 
