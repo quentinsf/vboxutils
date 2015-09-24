@@ -7,10 +7,11 @@
 
 import collections
 import csv
+import json
 import re
 import sys
-import json
-from datetime import datetime, timedelta
+import time
+from datetime import datetime
 
 import logging
 logging.basicConfig()
@@ -23,6 +24,32 @@ class TimeEncoder(json.JSONEncoder):
             return obj.isoformat()
         return json.JSONEncoder.default(self, obj)
 
+# Here's a Jinja template for creating a GPX file
+GPX_TEMPLATE = """
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx
+  version="1.0"
+  creator="vboxread"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://www.topografix.com/GPX/1/0"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/0 http://www.topografix.com/GPX/1/0/gpx.xsd">
+<time>{{vboxdata.creation_date.strftime('%Y-%m-%dT%H:%M:%SZ')}}</time>
+<bounds minlat="{{vboxdata.min_lat}}" minlon="{{vboxdata.min_long}}" maxlat="{{vboxdata.max_lat}}" maxlon="{{vboxdata.max_long}}"/>
+<trk>
+  <trkseg>
+    {% for p in vboxdata.data %}
+    <trkpt lat="{{p.lat_deg}}" lon="{{p.long_deg}}">
+      <ele>{{p.height}}</ele>
+      <time>{{p.datetime.strftime('%Y-%m-%dT%H:%M:%SZ')}}</time>
+      <course>{{p.heading}}</course>
+      <speed>{{p.velocity}}</speed>
+      <sat>{{p.sats}}</sat>
+    </trkpt>
+    {% endfor %}
+  </trkseg>
+</trk>
+</gpx>
+"""
 
 class VBoxData:
     """
@@ -57,6 +84,8 @@ class VBoxData:
         from_vbo_file should be an open file-like object.
         """
         section = None
+        # How many fields on a complete data input line?
+        expected_fields = None
         for raw_line in from_vbo_file:
             line = raw_line.strip()
 
@@ -87,14 +116,21 @@ class VBoxData:
                     assert(self.column_names[1] == 'time')  # We assume this later
                     assert(self.column_names[2] == 'lat')   # We assume this later
                     assert(self.column_names[3] == 'long')  # We assume this later
-                    self.column_names.append('datetime')    # We'll add one of our own
+                    self.column_names.append('time_of_day') # time converted into secs
+                    self.column_names.append('datetime')    # absolute time
+                    self.column_names.append('timestamp')   # absolute time in secs
+                    self.column_names.append('lat_deg')     # latitude in degrees
+                    self.column_names.append('long_deg')    # longitude in degrees
                     VBoxDataTuple = collections.namedtuple('VBoxDataTuple', self.column_names)
 
                 if line and (section == 'data'):
                     bits = line.split()
-                    # Check we got the number of fields we expected
-                    if len(bits) != len(self.column_names)-1:
-                        log.warning('Skipping a data line which does not include %s fields', len(self.column_names)-1)
+                    # Check we got the number of fields we expected - the last line
+                    # can sometimes be truncated.
+                    if expected_fields is None: 
+                        expected_fields=len(bits)
+                    if len(bits) != expected_fields:
+                        log.warning('Skipping a data line which does not include %s fields', expected_fields)
                         continue
 
                     # I think data fields are always numbers, but in different formats
@@ -105,15 +141,18 @@ class VBoxData:
                     # Time, however, looks like a float but is HHMMSS.SS
                     tstamp = bits[1]
                     (hrs, mins, secs) = int(tstamp[0:2]), int(tstamp[2:4]), float(tstamp[4:])
-                    fields[1] = 3600 * hrs + 60 * mins + secs
+                    # Add a new field with the time in seconds from midnight
+                    fields.append(3600 * hrs + 60 * mins + secs)
                     # We turn it into an absolute timestamp by offsetting the time 
                     # from midnight on the creation date.
-                    fields.append( self.creation_midnight.replace(hour = hrs, minute=mins, second=int(secs)) )
+                    absolute_time = self.creation_midnight.replace(hour = hrs, minute=mins, second=int(secs))
+                    fields.append( absolute_time )
+                    fields.append(  time.mktime(absolute_time.timetuple()) )
 
                     # And lat and long are in minutes, with west as positive
-                    # Convert to conventional degrees
-                    fields[2] = float(fields[2])/60.0
-                    fields[3] = -1 * float(fields[3])/60.0
+                    # Convert to conventional degrees as lat_deg and long_deg
+                    fields.append( float(fields[2])/60.0 )
+                    fields.append( -1 * float(fields[3])/60.0 )
 
                     # If there's no GPS signal, we won't have absolute time.
                     # We assume that time=000000.00 indicates the start of useful data.
@@ -125,10 +164,10 @@ class VBoxData:
                     tup = VBoxDataTuple(*fields)
                     self.data.append(tup)
 
-        self.min_lat = min([d.lat for d in self.data])
-        self.max_lat = max([d.lat for d in self.data])
-        self.min_long = min([d.long for d in self.data])
-        self.max_long = max([d.long for d in self.data])
+        self.min_lat = min([d.lat_deg for d in self.data])
+        self.max_lat = max([d.lat_deg for d in self.data])
+        self.min_long = min([d.long_deg for d in self.data])
+        self.max_long = max([d.long_deg for d in self.data])
         self.max_velocity = max([d.velocity for d in self.data])
 
 
@@ -156,7 +195,7 @@ class VBoxData:
         plt.subplot(211)
         plt.title('Accelerator, brake and speed')
         accel_line, brake_line, speed_line = plt.plot(
-            [d.time for d in self.data],   # x axis
+            [d.time_of_day for d in self.data],   # x axis
             [(d.PedalPos_CH, d.BrakePressure_HS1_CH, d.VehicleSpeed_HS1_CH ) for d in self.data]  # y values
         )
         plt.legend([accel_line, brake_line, speed_line], ['Accel', 'Brake', 'Speed'])
@@ -165,7 +204,7 @@ class VBoxData:
         plt.title('Steering')
         plt.xlabel('Time (s)')
         steering_line, indicator_line = plt.plot(
-            [d.time for d in self.data],   # x axis
+            [d.time_of_day for d in self.data],   # x axis
             [(d.SteeringWheelAngle_CH, [0, -100, 100][int(d.DirectionIndicationSwitchHS_CH)]) for d in self.data]  # y values
         )
         plt.axhline()
@@ -192,8 +231,8 @@ class VBoxData:
             sys.exit(1)
 
         plt.scatter(
-            [d.long for d in self.data],
-            [d.lat for d in self.data],
+            [d.long_deg for d in self.data],
+            [d.lat_deg for d in self.data],
             c=[(d.velocity/max_vel,0.4,1.0-d.velocity/max_vel,1) for d in self.data],
             s=1,
             marker = u'.',
@@ -217,9 +256,8 @@ class VBoxData:
 
     def write_gpx(self, outfile=sys.stdout):
         # Get the Jinja template for rendering a GPX file
-        from jinja2 import Environment, FileSystemLoader
-        env = Environment(loader=FileSystemLoader('.'))
-        template = env.get_template('track.gpx.j2')
+        import jinja2
+        template = jinja2.Template(GPX_TEMPLATE)
         outfile.write( template.render(vboxdata = self) )
 
 
@@ -234,7 +272,7 @@ class VBoxData:
             if prev_p:
                 features.append(
                    { "type": "Feature", 
-                     "geometry": { "type": "LineString", "coordinates": [[ prev_p.long, prev_p.lat ], [ p.long, p.lat ]] },
+                     "geometry": { "type": "LineString", "coordinates": [[ prev_p.long_deg, prev_p.lat_deg ], [ p.long_deg, p.lat_deg ]] },
                      "properties": p._asdict()
                    }
                 )

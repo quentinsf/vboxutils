@@ -46,7 +46,7 @@ def home():
                   "zoom": 12
             }
             marker = {
-                "position": {"lat": vbox_data.data[0].lat, "lng": vbox_data.data[0].long},
+                "position": {"lat": vbox_data.data[0].lat_deg, "lng": vbox_data.data[0].long_deg},
                 "title": "Start"
             }
             # Make GeoJSON file            

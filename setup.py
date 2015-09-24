@@ -2,16 +2,18 @@
 
 from setuptools import setup
 
+VERSION="0.3"
+
 setup(
     name="vboxutils",
     packages = ['vboxutils'],
     entry_points = {
         'console_scripts': [
             'vboxread = vboxutils.vboxread:main',
-            'vboxsrv = vboxutils.de:main',
+            'vboxsrv = vboxutils.vboxsrv:main',
         ]
     },
-    version = "0.1",
+    version = VERSION,
     description = "Read RaceLogic VBOX .VBO files",
     author = "Quentin Stafford-Fraser",
     author_email = "quentin@pobox.com",
@@ -20,6 +22,6 @@ setup(
         'click',
         'jinja2'
     ],
-    download_url = 'https://github.com/quentinsf/vboxutils/tarball/0.1',
+    download_url = 'https://github.com/quentinsf/vboxutils/tarball/%s' % VERSION,
     keywords = 'gis'
 )

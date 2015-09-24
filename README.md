@@ -4,9 +4,14 @@ The `vboxread.py` script can read the .VBO format files produced by a RaceLogic 
 
 It will perform a couple of conversions on the data:
 
-* The time, which is in the VBOX file as HHMMSS.SSS, will be converted to absolute seconds since the epoch, assuming this time is on the same day as the creation time recorded in the file. This makes sense as long as a GPS is connected.
+* The time, which is in the VBOX file as HHMMSS.SSS, will be converted to two extra fields:
+    * time_of_day : time since midnight in seconds
+    * timestamp: absolute seconds since the epoch, assuming this time is on the same day as the creation time recorded in the file. This makes sense as long as a GPS is connected and gives us this.
+    * datetime: timestamp as a human-readable string
 
-* Latitude and longitude are in the VBOX file as minutes, with west being positive. This script converts them to degrees, with east as positive.
+* Latitude and longitude are in the VBOX file as minutes, with west being positive. This script converts them to degrees, with east as positive:
+    - lat_deg
+    - long_deg 
 
 
 ## Basic use
