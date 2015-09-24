@@ -14,7 +14,7 @@ from vbox import VBoxData
 
 # Click is a handy way to parse command-line arguments:  http://click.pocoo.org
 @click.command()
-@click.option('--graph', '-g', default=False, is_flag=True, help="Draw a pretty plot")
+@click.option('--graph', '-r', default=False, is_flag=True, help="Draw a pretty plot")
 @click.option('--track', '-t', default=False, is_flag=True, help="Draw a map")
 @click.option('--gpx',   '-p', default=None, type=click.File('w'), help="Output a GPX file")
 @click.option('--csv',   '-c', default=None, type=click.File('w'), help="Output a CSV file")
