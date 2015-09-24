@@ -2,7 +2,7 @@
 
 from setuptools import setup
 
-VERSION="0.3"
+VERSION="0.4"
 
 setup(
     name="vboxutils",
@@ -11,6 +11,7 @@ setup(
         'console_scripts': [
             'vboxread = vboxutils.vboxread:main',
             'vboxsrv = vboxutils.vboxsrv:main',
+            'vboxtrim = vboxutils.vboxtrim:main',            
         ]
     },
     version = VERSION,
@@ -20,7 +21,8 @@ setup(
     url = "http://github.com/quentinsf/vboxutils",
     install_requires = [
         'click',
-        'jinja2'
+        'jinja2',
+        'pandas',
     ],
     download_url = 'https://github.com/quentinsf/vboxutils/tarball/%s' % VERSION,
     keywords = 'gis'

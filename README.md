@@ -26,7 +26,17 @@ for the options.  Filenames can generally be specified as '-' if you want to use
 
 This will plot a graph and output a CSV file of the data.
 
-The `vboxsvr.py` script will create a webserver on port 5000 that can take uploads of tracks and serve them up overlaid on a Google map.  
+Sometimes, it can be useful to make sure, regardless of timing and parking arrangements, that different journeys begin and end from the same place.  
+The `vboxtrim` utility reads and writes CSV files, and takes optional arguments specifying a 'start zone' and 'end zone', each specified as long,lat,radius.  The output file will begin at the point where the track first leaves the start zone and finish at the point where it first enters the end zone.
+
+For example:
+
+    vboxtrim -s -1.56528,52.38286,300 -e -1.50707,52.408,300 \
+        -o trimmed.csv route.csv
+
+will output the bits of `route.csv` which start more than 300m from the Kirby Corner roundabout and will finish 300m from Coventry Cathedral.  It will save it to `trimmed.csv` If you have matplotlib installed, add `--graph` to see the effect.
+
+The `vboxsvr.py` script will create a webserver on port 5000 that can take uploads of .VBO tracks and serve them up overlaid on a Google map.  
 
     vboxsrv
 
