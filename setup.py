@@ -23,8 +23,11 @@ setup(
     install_requires = [
         'click',
         'jinja2',
-        'pandas',
     ],
+    extras_require = {
+        'trim': [ 'pandas', 'numpy' ],
+        'plot': [ 'matplotlib' ],
+    },
     download_url = 'https://github.com/quentinsf/vboxutils/tarball/%s' % VERSION,
     keywords = 'gis'
 )
