@@ -37,6 +37,8 @@ For example:
 
 will output the bits of `route.csv` which start more than 300m from the Kirby Corner roundabout and will finish 300m from Coventry Cathedral.  It will save it to `trimmed.csv` If you have matplotlib installed, add `--graph` to see the effect.
 
+If a start or end point is not specified, the beginning or end of the file will be used.  But if they *are* specified and the track does not pass through them, `vboxtrim` will exit with an error unless the -k option is specified. 
+
 Since we expect to do most manipulations with these CSV files, it's useful to have a way to view the results on a map.  Google Earth and many other systems can view GPX files, which you can create from a CSV with `vboxcsv2gpx`:
 
     vboxcsv2gpx -o trimmed.gpx trimmed.csv

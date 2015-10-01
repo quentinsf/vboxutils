@@ -190,7 +190,12 @@ class VBoxData:
         Plot some interesting things on a graph.
         """
 
-        import matplotlib.pyplot as plt
+        try:
+            from matplotlib import pyplot as plt
+        except ImportError:
+            print >>sys.stderr, "Sorry, matplotlib needs to be installed for graphics."
+            print >>sys.stderr, "Try 'pip install matplotlib'."
+            sys.exit(1)
 
         plt.figure(1)
 
@@ -220,8 +225,12 @@ class VBoxData:
         """
         Plot location and colour with speed.
         """
-        import matplotlib.pyplot as plt
-        from matplotlib.transforms import ScaledTranslation
+        try:
+            from matplotlib import pyplot as plt
+        except ImportError:
+            print >>sys.stderr, "Sorry, matplotlib needs to be installed for graphs."
+            print >>sys.stderr, "Try 'pip install matplotlib'."
+            sys.exit(1)
 
         fig = plt.figure()
         plt.title('Track')

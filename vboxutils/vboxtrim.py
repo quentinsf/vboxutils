@@ -18,8 +18,14 @@
 
 import click
 import sys
-import pandas as pd
-import numpy as np
+
+try:
+    import pandas as pd
+    import numpy as np
+except ImportError:
+    print >>sys.stderr, "Sorry, numpy and pandas need to be installed for this."
+    print >>sys.stderr, "Try 'pip install numpy pandas'."
+    sys.exit(1)
 
 def haversine(long1, lat1, long2, lat2):
     """ 
@@ -43,9 +49,10 @@ def haversine(long1, lat1, long2, lat2):
 @click.option('--end',   '-e', default=None, help="End zone: long,lat,dist")
 @click.option('--out',   '-o', default=sys.stdout, type=click.File('w'), help="Output file")
 @click.option('--graph', '-r', default=False, is_flag=True, help="Draw a pretty plot using matplotlib")
+@click.option('--cont',  '-k', default=False, is_flag=True, help="Continue even if start or end not found")
 @click.argument('csv_file', type=click.File('r'))
 
-def main(start, end, out, graph, csv_file):
+def main(start, end, out, graph, cont, csv_file):
 
     # Parse start and end zone specifications
     if start:
@@ -75,7 +82,11 @@ def main(start, end, out, graph, csv_file):
         # the current one is greater or equal.
         start_point  = data[(from_start.shift() < start_dist) & (from_start >= start_dist)].head(1)
         if start_point.empty:
-            print >>sys.stderr, "WARNING - no start point found"
+            if cont:
+                print >>sys.stderr, "WARNING - no start point found"
+            else:
+                print >>sys.stderr, "ABORTING - no start point found"
+                sys.exit(1)
         else:
             start_idx = start_point.index.tolist()[0]
 
@@ -89,7 +100,11 @@ def main(start, end, out, graph, csv_file):
         # the current one is less than or equal.
         end_point  = data_after_start[(from_end.shift() > end_dist) & (from_end < end_dist)].head(1)
         if end_point.empty:
-            print >>sys.stderr, "WARNING - no end point found"
+            if cont:
+                print >>sys.stderr, "WARNING - no end point found"
+            else:
+                print >>sys.stderr, "ABORTING - no end point found"
+                sys.exit(1)
         else:
             end_idx = end_point.index.tolist()[0] - start_idx
             # from_end[0:end_idx].plot()
@@ -100,7 +115,13 @@ def main(start, end, out, graph, csv_file):
     active_data.to_csv(out, index=False)
 
     if graph:
-        from matplotlib import pyplot as plt
+        try:
+            from matplotlib import pyplot as plt
+        except ImportError:
+            print >>sys.stderr, "Sorry, matplotlib needs to be installed for graphs."
+            print >>sys.stderr, "Try 'pip install matplotlib'."
+            sys.exit(1)
+
         plt.plot(data.long_deg, data.lat_deg, 'k', linewidth=4)
         plt.plot(active_data.long_deg, active_data.lat_deg, 'r', linewidth=2)
         if start:
