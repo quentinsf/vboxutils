@@ -55,11 +55,6 @@ One of the most useful utilities for handling GPS information is [GPSBabel](http
              -o kml -F my_simpler_route.kml
 
 
-The experimental `vboxsvr` script will create a webserver on port 5000 that can take uploads of .VBO tracks and serve them up overlaid on a Google map.  
-
-    vboxsrv
-
-
 
 ## Installation
 
