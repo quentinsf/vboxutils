@@ -39,11 +39,21 @@ will output the bits of `route.csv` which start more than 300m from the Kirby Co
 
 If a start or end point is not specified, the beginning or end of the file will be used.  But if they *are* specified and the track does not pass through them, `vboxtrim` will exit with an error unless the -k option is specified. 
 
-Since we expect to do most manipulations with these CSV files, it's useful to have a way to view the results on a map.  Google Earth and many other systems can view GPX files, which you can create from a CSV with `vboxcsv2gpx`:
+### Google Maps, etc
+
+Since we expect to do most of our manipulations with these CSV files, it's useful to have a way to view the results on a map.  Google Earth and many other systems can view GPX files, which you can create from a CSV with `vboxcsv2gpx`:
 
     vboxcsv2gpx -o trimmed.gpx trimmed.csv
 
-Many of these utilities will output to stdout if no output file is specified.
+(Many of these utilities, by the way, will output to stdout if no output file is specified.)
+
+You can upload GPX or KML files to Google Maps if you use the [My Maps](https://www.google.com/mymaps) facility.  But the uploaded data cannot be too large.
+
+One of the most useful utilities for handling GPS information is [GPSBabel](http://www.gpsbabel.org).  The following command, for example, will read a GPX file, simplify it to be 1000 points, and convert it to KML.  This can then readily be incorporated in a Google map:
+
+    gpsbabel -i gpx -f my_route.gpx -x simplify,count=1000 \
+             -o kml -F my_simpler_route.kml
+
 
 The experimental `vboxsvr` script will create a webserver on port 5000 that can take uploads of .VBO tracks and serve them up overlaid on a Google map.  
 
